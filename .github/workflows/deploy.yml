@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: SSH로 EC2에 접속하기
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          APPLICATION_PROPERTIES: ${{ secrets.APPLICATION_PROPERTIES }}
         with:
           host: ${{ secrets.EC2_HOST }} # EC2의 주소
           username: ${{ secrets.EC2_USERNAME }} # EC2 접속 username
@@ -19,7 +21,9 @@ jobs:
           script_stop: true # 아래 script 중 실패하는 명령이 하나라도 있으면 실패로 처리
           script: |
             cd /home/ubuntu/cicd02_boot # 여기 경로는 자신의 EC2에 맞는 경로로 재작성하기
+            rm -rf src/main/resources/application.properties
             git pull origin main
+            echo "$APPLICATION_PROPERTIES" > src/main/resources/application.properties
             chmod +x ./gradlew
             ./gradlew clean build
             sudo fuser -k -n tcp 8080 || true # || true를 붙인 이유는 8080에 종료시킬 프로세스가 없더라도 실패로 처리하지 않기 위해서이다. 
